@@ -4,12 +4,9 @@ pragma solidity ^0.8.24;
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {IFHEPayment} from "./IFHEPayment.sol";
 
 import {ACL} from "./ACL.sol";
-import {FHEPayment} from "./FHEPayment.sol";
-import {aclAdd} from "../addresses/ACLAddress.sol";
-import {fhePaymentAdd} from "../addresses/FHEPaymentAddress.sol";
-import {inputVerifierAdd} from "../addresses/InputVerifierAddress.sol";
 
 interface IInputVerifier {
     function verifyCiphertext(
@@ -37,9 +34,9 @@ contract TFHEExecutor is UUPSUpgradeable, Ownable2StepUpgradeable {
     uint256 private constant MINOR_VERSION = 1;
     uint256 private constant PATCH_VERSION = 0;
 
-    ACL private constant acl = ACL(aclAdd);
-    FHEPayment private constant fhePayment = FHEPayment(fhePaymentAdd);
-    IInputVerifier private constant inputVerifier = IInputVerifier(inputVerifierAdd);
+    ACL internal acl;
+    IFHEPayment internal fhePayment;
+    IInputVerifier internal inputVerifier;
 
     /// @custom:storage-location erc7201:fhevm.storage.TFHEExecutor
     struct TFHEExecutorStorage {
@@ -54,7 +51,7 @@ contract TFHEExecutor is UUPSUpgradeable, Ownable2StepUpgradeable {
 
     // keccak256(abi.encode(uint256(keccak256("fhevm.storage.TFHEExecutor")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 private constant TFHEExecutorStorageLocation =
-        0xa436a06f0efce5ea38c956a21e24202a59b3b746d48a23fb52b4a5bc33fe3e00;
+    0xa436a06f0efce5ea38c956a21e24202a59b3b746d48a23fb52b4a5bc33fe3e00;
 
     function _getTFHEExecutorStorage() internal pure returns (TFHEExecutorStorage storage $) {
         assembly {
@@ -85,8 +82,15 @@ contract TFHEExecutor is UUPSUpgradeable, Ownable2StepUpgradeable {
     }
 
     /// @notice Initializes the contract setting `initialOwner` as the initial owner
-    function initialize(address initialOwner) public initializer {
+    function initialize(
+        address initialOwner,
+        address aclAddress,
+        address fhePaymentAddress,
+        address inputVerifierAddress) public initializer {
         __Ownable_init(initialOwner);
+        acl = ACL(aclAddress);
+        fhePayment = IFHEPayment(fhePaymentAddress);
+        inputVerifier = IInputVerifier(inputVerifierAddress);
     }
 
     enum Operators {
@@ -602,15 +606,15 @@ contract TFHEExecutor is UUPSUpgradeable, Ownable2StepUpgradeable {
     function getVersion() external pure virtual returns (string memory) {
         return
             string(
-                abi.encodePacked(
-                    CONTRACT_NAME,
-                    " v",
-                    Strings.toString(MAJOR_VERSION),
-                    ".",
-                    Strings.toString(MINOR_VERSION),
-                    ".",
-                    Strings.toString(PATCH_VERSION)
-                )
-            );
+            abi.encodePacked(
+                CONTRACT_NAME,
+                " v",
+                Strings.toString(MAJOR_VERSION),
+                ".",
+                Strings.toString(MINOR_VERSION),
+                ".",
+                Strings.toString(PATCH_VERSION)
+            )
+        );
     }
 }

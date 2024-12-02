@@ -5,7 +5,6 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
-import "../addresses/TFHEExecutorAddress.sol";
 
 contract ACL is UUPSUpgradeable, Ownable2StepUpgradeable {
     /// @notice Name of the contract
@@ -16,7 +15,7 @@ contract ACL is UUPSUpgradeable, Ownable2StepUpgradeable {
     uint256 private constant MINOR_VERSION = 1;
     uint256 private constant PATCH_VERSION = 0;
 
-    address private constant tfheExecutorAddress = tfheExecutorAdd;
+    address internal tfheExecutorAddress;
 
     /// @custom:storage-location erc7201:fhevm.storage.ACL
     struct ACLStorage {
@@ -52,6 +51,10 @@ contract ACL is UUPSUpgradeable, Ownable2StepUpgradeable {
     /// @notice Initializes the contract setting `initialOwner` as the initial owner
     function initialize(address initialOwner) external initializer {
         __Ownable_init(initialOwner);
+    }
+
+    function setTFHExecutorAddress(address _tfheExecutorAddress) external onlyOwner {
+        tfheExecutorAddress = _tfheExecutorAddress;
     }
 
     // allowTransient use of `handle` for address `account`.

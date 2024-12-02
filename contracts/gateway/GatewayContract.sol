@@ -5,8 +5,6 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "../addresses/KMSVerifierAddress.sol";
-import "../addresses/ACLAddress.sol";
 import "./IKMSVerifier.sol";
 
 contract GatewayContract is UUPSUpgradeable, Ownable2StepUpgradeable {
@@ -18,8 +16,8 @@ contract GatewayContract is UUPSUpgradeable, Ownable2StepUpgradeable {
     uint256 private constant MINOR_VERSION = 1;
     uint256 private constant PATCH_VERSION = 0;
 
-    IKMSVerifier private constant kmsVerifier = IKMSVerifier(kmsVerifierAdd);
-    address private constant aclAddress = aclAdd;
+    IKMSVerifier internal kmsVerifier;
+    address internal aclAddress;
 
     uint256 private constant MAX_DELAY = 1 days;
 
@@ -53,7 +51,7 @@ contract GatewayContract is UUPSUpgradeable, Ownable2StepUpgradeable {
     }
 
     function getKmsVerifierAddress() external virtual returns (address) {
-        return kmsVerifierAdd;
+        return address(kmsVerifier);
     }
 
     function getCounter() external virtual returns (uint256) {
@@ -91,8 +89,10 @@ contract GatewayContract is UUPSUpgradeable, Ownable2StepUpgradeable {
         _disableInitializers();
     }
 
-    function initialize(address _gatewayOwner) external initializer {
+    function initialize(address _gatewayOwner, address _kmsVerifierAddress, address _aclAddress) external initializer {
         __Ownable_init(_gatewayOwner);
+        kmsVerifier = IKMSVerifier(_kmsVerifierAddress);
+        aclAddress = _aclAddress;
     }
 
     modifier onlyRelayer() {
